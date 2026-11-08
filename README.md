@@ -49,6 +49,11 @@ silkscreen and layout.
 There is no separate button bar and no internal cable to tap. It sits in the
 indoor frame, back side towards the roof.
 
+**Front side** (towards the room): silkscreen `FAN-CONTRL 2025-05-17`. Segment
+LCD U5 soldered on through two pin rows. The 6 buttons are coil springs that
+press against the front panel, each with a backlight LED inside. The springs
+are the capacitive touch electrodes. No other parts.
+
 **Size:** 270 × 55 mm. The frame has room for up to 300 × 75 mm, but its
 standoffs only fit the original outline, so a replacement board (approach B)
 keeps 270 × 55 mm and the original hole pattern.

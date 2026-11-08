@@ -53,6 +53,8 @@ indoor frame, back side towards the roof.
 header J4 and the CAN transceiver U8 are all **unfitted**: the PCB is laid out
 for a second variant with an extra ARM MCU and CAN bus. In this unit the
 wireless SoC U2 (24 MHz crystal, PCB antenna) runs the whole fan.
+Its marking is generic (`AMM QFN40 251701`: package + date code), so the part
+is deliberately unidentifiable.
 
 **Front side** (towards the room): silkscreen `FAN-CONTRL 2025-05-17`. Segment
 LCD U5 soldered on through two pin rows. The 6 buttons are coil springs that
@@ -81,7 +83,7 @@ keeps 270 × 55 mm and the original hole pattern.
 
 | Ref | Package | Role (inferred) |
 |---|---|---|
-| U2 | QFN-32, 24 MHz crystal Y1, PCB antenna | **the MCU**: wireless SoC, also the radio for the remote. Marking not legible yet |
+| U2 | QFN-40, 24 MHz crystal Y1, PCB antenna | **the MCU**: wireless SoC, also the radio for the remote. Marked `AMM QFN40 251701`, no known part |
 | U6, Y2, U8 | LQFP-48, crystal, SOIC-8 | **not fitted** (MCU + CAN variant) |
 | U9 | small QFN, 6 series resistors | touch controller for the 6 buttons |
 | U10 | small SMD inside milled slots | temperature sensor (slots isolate it thermally) |
@@ -100,10 +102,14 @@ keeps doing everything else (touch, LCD, anti-pinch, voltage guard, AUTO), so
 the panel stays in sync by construction. Hardware: ESP32 + 12 V regulator +
 3 wires. J2 is 3.3 V logic, so no level shifter.
 
-**A2. New firmware on U2**, only if U2 turns out to be a chip ESPHome supports.
-Keeps all hardware, but touch, LCD, BLDC driver and lid logic become ours to write.
+New firmware on U2 is out: the chip can't be identified.
 
-**B. Replace the board** if J2 carries nothing usable. New board with the same
+**C. Read the LCD, press the buttons** if J2 is silent. The ESP32 sniffs the
+bus between U2 and the LCD driver U7 (state: speed, AUTO, direction, icons) and
+"touches" the 6 springs through analog switches (virtual finger). Original
+firmware stays in charge. Hacky, and light/lid state only if the LCD shows them.
+
+**B. Replace the board** if neither A nor C works. New board with the same
 outline: ESP32, BLDC driver, lid H-bridge + current sense, 2 LED PWM channels,
 touch input, segment LCD, buzzer, temperature sensor. Full control, but sensorless
 BLDC start, both anti-pinch functions and lid end positions become ours to rebuild.

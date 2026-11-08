@@ -108,8 +108,12 @@ in hex. It never drives a pin.
 
 1. VanVent powered, multimeter: J2 `UTX`, `URX`, `PRG` against `GND`.
    UTX/URX must idle at ≤ 3.6 V.
-2. Solder a 5-pin header into J2 (or press jumper pins into the pads).
-   Connect `GND` → ESP GND, `UTX` → GPIO27, `URX` → GPIO26. ESP powered by USB.
+2. VanVent unpowered. Solder three thin wires onto the J2 pads from the back,
+   board stays mounted. No pin header: its pins would poke through towards the
+   LCD and touch side. For a quick test, pressing male jumper pins into the
+   pads works too. Scrape the pad if the conformal coating stops the solder.
+   `GND` → ESP GND, `UTX` → GPIO27, `URX` → GPIO26. Leave `3V3` and `PRG`
+   unconnected (PRG is a boot pin). ESP powered by USB.
 3. Copy `secrets.yaml.example` to `secrets.yaml`, then
    `python -m esphome run sniffer.yaml` (PowerShell, not Git Bash).
 4. Open `http://<ip>/`: live log + baud selector. Wrong baud shows as garbage

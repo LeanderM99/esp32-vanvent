@@ -49,6 +49,10 @@ silkscreen and layout.
 There is no separate button bar and no internal cable to tap. It sits in the
 indoor frame, back side towards the roof.
 
+**Size:** 270 × 55 mm. The frame has room for up to 300 × 75 mm, but its
+standoffs only fit the original outline, so a replacement board (approach B)
+keeps 270 × 55 mm and the original hole pattern.
+
 ### Connectors
 
 | Ref | Silkscreen | Goes to |

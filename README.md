@@ -49,6 +49,11 @@ silkscreen and layout.
 There is no separate button bar and no internal cable to tap. It sits in the
 indoor frame, back side towards the roof.
 
+**U2 is the only processor.** The LQFP-48 footprint U6 with its crystal Y2, SWD
+header J4 and the CAN transceiver U8 are all **unfitted**: the PCB is laid out
+for a second variant with an extra ARM MCU and CAN bus. In this unit the
+wireless SoC U2 (24 MHz crystal, PCB antenna) runs the whole fan.
+
 **Front side** (towards the room): silkscreen `FAN-CONTRL 2025-05-17`. Segment
 LCD U5 soldered on through two pin rows. The 6 buttons are coil springs that
 press against the front panel, each with a backlight LED inside. The springs
@@ -63,12 +68,12 @@ keeps 270 × 55 mm and the original hole pattern.
 | Ref | Silkscreen | Goes to |
 |---|---|---|
 | J9 | `DC 12V`, `+` | supply, through PTC1 (polyfuse) and D2 |
-| J8 | `U` `V` `W` | fan motor, 3-phase BLDC. Test pads `FG`, `BLDC_SDA` next to it |
+| J8 | `U` `V` `W` | fan motor, 3-phase BLDC. Test pads `FG`, `BLDC_SDA`, `BLDC_SCL` next to it |
 | — | `NC` `M_OUT+` `M_OUT-` | lid motor (2 wires) |
 | J7 | `3V3` `GND` `HALL_1` `HALL_2` | lid position sensors. Cable has only 3 wires |
-| 2× | `LED+` `LED-` | LED strip, two channels (colour temperature) |
-| **J2** | `3V3` `PRG` `GND` `UTX` `URX` | **UART + boot pin**, pads only |
-| — | `GND` `SWCLK` `SWDIO` | SWD of the main MCU, pads only |
+| J10 + 1 | `LED+` `LED-` | LED strip, two channels (colour temperature) |
+| **J2** | `3V3` `PRG` `GND` `UTX` `URX` | **UART + boot pin of U2**, pads only, 2.54 mm |
+| J4 | `3V3` `SWDIO` `SWCLK` `GND` | SWD of the unfitted U6 |
 | J11 | `TOUCH_INT` `I2C_SDA` `I2C_SCL` `TOUCH_RST` | touch controller ↔ MCU, pads only |
 | J5 | `CANH` `CANL` | CAN, pads only. Transceiver U8 (SOIC-8) **not fitted** |
 
@@ -76,24 +81,27 @@ keeps 270 × 55 mm and the original hole pattern.
 
 | Ref | Package | Role (inferred) |
 |---|---|---|
-| U6 | LQFP-32, crystal Y2 | main MCU (ARM, it has SWD) |
-| U2 | QFN, crystal Y1, PCB antenna | 2.4 GHz radio for the remote |
+| U2 | QFN-32, 24 MHz crystal Y1, PCB antenna | **the MCU**: wireless SoC, also the radio for the remote. Marking not legible yet |
+| U6, Y2, U8 | LQFP-48, crystal, SOIC-8 | **not fitted** (MCU + CAN variant) |
 | U9 | small QFN, 6 series resistors | touch controller for the 6 buttons |
 | U10 | small SMD inside milled slots | temperature sensor (slots isolate it thermally) |
 | U7 | SOP-24 next to a pin row | segment-LCD driver |
-| — | QFN next to J8 | BLDC driver |
-| — | TSSOP-16, shunt R47 0.2 Ω | lid motor driver + current sense (anti-pinch) |
-| — | SOT-23-6 + L1 | 12 V → logic buck |
+| U3 | QFN next to J8 | BLDC driver, configured over I²C (`BLDC_SDA`/`BLDC_SCL`) |
+| U11 | TSSOP-16, shunt R47 0.2 Ω | lid motor driver + current sense (anti-pinch) |
+| U1 | SOT-23-6 + L1 10 µH | 12 V → logic buck |
 | LS1 | | buzzer |
 
 ## Approach
 
-**A. ESP32 on J2 (preferred).** J2 is the UART next to the radio chip. If the
-radio talks to the MCU over it, the ESP32 takes the radio's place: it sends the
-remote's commands and reads the state the MCU reports (the remote's LCD
-suggests it does). The original MCU keeps doing everything else (touch, LCD,
-anti-pinch, voltage guard, AUTO), so the panel stays in sync by construction.
-Hardware: ESP32 + 12 V regulator + 4 wires. J2 is 3.3 V logic, so no level shifter.
+**A. ESP32 on J2 (preferred).** J2 is U2's own UART. In the CAN variant it
+probably links U2 to U6, so U2's firmware may speak a state/command protocol
+there even with U6 missing. If it does, the ESP32 takes U6's place, and U2
+keeps doing everything else (touch, LCD, anti-pinch, voltage guard, AUTO), so
+the panel stays in sync by construction. Hardware: ESP32 + 12 V regulator +
+3 wires. J2 is 3.3 V logic, so no level shifter.
+
+**A2. New firmware on U2**, only if U2 turns out to be a chip ESPHome supports.
+Keeps all hardware, but touch, LCD, BLDC driver and lid logic become ours to write.
 
 **B. Replace the board** if J2 carries nothing usable. New board with the same
 outline: ESP32, BLDC driver, lid H-bridge + current sense, 2 LED PWM channels,
@@ -113,10 +121,9 @@ in hex. It never drives a pin.
 
 1. VanVent powered, multimeter: J2 `UTX`, `URX`, `PRG` against `GND`.
    UTX/URX must idle at ≤ 3.6 V.
-2. VanVent unpowered. Solder three thin wires onto the J2 pads from the back,
-   board stays mounted. No pin header: its pins would poke through towards the
-   LCD and touch side. For a quick test, pressing male jumper pins into the
-   pads works too. Scrape the pad if the conformal coating stops the solder.
+2. VanVent unpowered, board removed. Solder a JST XH header (B5B-XH-A, or
+   B3B-XH-A on `GND` `UTX` `URX`) into J2 from the back, solder on the front,
+   trim the pins flush (LCD side). XH is 2.5 mm, J2 2.54 mm, fits.
    `GND` → ESP GND, `UTX` → GPIO27, `URX` → GPIO26. Leave `3V3` and `PRG`
    unconnected (PRG is a boot pin). ESP powered by USB.
 3. Copy `secrets.yaml.example` to `secrets.yaml`, then

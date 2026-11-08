@@ -74,7 +74,7 @@ keeps 270 × 55 mm and the original hole pattern.
 | — | `NC` `M_OUT+` `M_OUT-` | lid motor (2 wires) |
 | J7 | `3V3` `GND` `HALL_1` `HALL_2` | lid position sensors. Cable has only 3 wires |
 | J10 + 1 | `LED+` `LED-` | LED strip, two channels (colour temperature) |
-| **J2** | `3V3` `PRG` `GND` `UTX` `URX` | **UART + boot pin of U2**, pads only, 2.54 mm |
+| **J2** | `3V3` `PRG` `GND` `UTX` `URX` | **UART + boot pin of U2**, pads only, **2.0 mm pitch** |
 | J4 | `3V3` `SWDIO` `SWCLK` `GND` | SWD of the unfitted U6 |
 | J11 | `TOUCH_INT` `I2C_SDA` `I2C_SCL` `TOUCH_RST` | touch controller ↔ MCU, pads only |
 | J5 | `CANH` `CANL` | CAN, pads only. Transceiver U8 (SOIC-8) **not fitted** |
@@ -122,22 +122,26 @@ Do not power an ESP32 from J2's 3V3: the board's small buck is not sized for it.
 
 ## Sniffing J2
 
-[`sniffer.yaml`](sniffer.yaml) listens on both J2 data lines and logs every burst
-in hex. It never drives a pin.
+Only `UTX` (U2's output) matters for now: with U6 unfitted, nothing drives `URX`.
 
-1. VanVent powered, multimeter: J2 `UTX`, `URX`, `PRG` against `GND`.
-   UTX/URX must idle at ≤ 3.6 V.
-2. VanVent unpowered, board removed. Solder a JST XH header (B5B-XH-A, or
-   B3B-XH-A on `GND` `UTX` `URX`) into J2 from the back, solder on the front,
-   trim the pins flush (LCD side). XH is 2.5 mm, J2 2.54 mm, fits.
-   `GND` → ESP GND, `UTX` → GPIO27, `URX` → GPIO26. Leave `3V3` and `PRG`
-   unconnected (PRG is a boot pin). ESP powered by USB.
-3. Copy `secrets.yaml.example` to `secrets.yaml`, then
-   `python -m esphome run sniffer.yaml` (PowerShell, not Git Bash).
-4. Open `http://<ip>/`: live log + baud selector. Wrong baud shows as garbage
-   or runs of `00`/`FF`. Try 9600, then 115200, then the rest.
-5. Press every panel button and every remote button, one at a time, and note
-   what you pressed when. Also leave it idle for a minute (periodic status frames?).
+1. Board out, VanVent unpowered. J2 has 2.0 mm pitch, so 2.54 mm headers and
+   JST XH don't fit. Solder thin wires straight into `GND` and `UTX`
+   (and `URX` for later): push the stripped end through from the labelled side,
+   solder on the LCD side, trim flush. Jumper wires with a female end are handy.
+   Leave `3V3` and `PRG` free (PRG is a boot pin).
+2. Board back in, everything plugged in, VanVent on. Multimeter: `UTX` against
+   `GND` must stay ≤ 3.6 V.
+3. Listen with either tool:
+   - **USB-UART adapter** set to 3.3 V: adapter RX → `UTX`, GND → `GND`, then
+     `python sniff.py COM5 9600` (hex + ASCII per burst, timestamped).
+   - **ESP32** with [`sniffer.yaml`](sniffer.yaml): `UTX` → GPIO27, `URX` → GPIO26,
+     `GND` → GND, ESP on USB. `python -m esphome run sniffer.yaml` (PowerShell),
+     live log + baud selector at `http://<ip>/`.
+4. Start listening **before** switching the VanVent on: boot messages come first.
+5. Wrong baud shows as garbage or runs of `00`/`FF`. Try 9600, 115200, then
+   2400…57600.
+6. Press every panel button one at a time and note what you pressed when.
+   Also leave it idle for a minute (periodic status frames?).
 
 ## Next steps
 

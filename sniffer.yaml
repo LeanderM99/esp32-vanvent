@@ -1,0 +1,67 @@
+# Temporary bus sniffer for the VanVent board's J2 header (3V3 PRG GND UTX URX).
+# Listens only, never drives a pin. Logs every burst on UTX and URX in hex.
+#
+#   J2 GND -> ESP32 GND
+#   J2 UTX -> GPIO27
+#   J2 URX -> GPIO26
+#
+# Measure UTX/URX against GND first: they must idle at <= 3.6 V.
+# Power the ESP32 from USB, not from J2 3V3 (the board's small buck can't
+# carry an ESP32).
+#
+# Live log and baud selector: http://<ip>/ (or `python -m esphome logs sniffer.yaml`).
+# Garbage bytes / lots of 00 or FF -> wrong baud, try the next one.
+
+esphome:
+  name: vanvent-sniffer
+
+esp32:
+  board: esp32dev
+
+logger:
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+web_server:
+
+uart:
+  - id: utx
+    rx_pin: GPIO27
+    baud_rate: 9600
+    rx_buffer_size: 1024
+    debug:
+      direction: RX
+      dummy_receiver: true
+      debug_prefix: "UTX"
+      after:
+        timeout: 20ms
+  - id: urx
+    rx_pin: GPIO26
+    baud_rate: 9600
+    rx_buffer_size: 1024
+    debug:
+      direction: RX
+      dummy_receiver: true
+      debug_prefix: "URX"
+      after:
+        timeout: 20ms
+
+select:
+  - platform: template
+    name: Baud
+    options: ["2400", "4800", "9600", "19200", "38400", "57600", "115200"]
+    initial_option: "9600"
+    optimistic: true
+    set_action:
+      - lambda: |-
+          uint32_t baud = atoi(x.c_str());
+          for (auto *u : {id(utx), id(urx)}) {
+            u->set_baud_rate(baud);
+            u->load_settings();
+          }

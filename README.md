@@ -162,12 +162,35 @@ running on these pads in normal operation, or the pads are not connected to U2
    listener started first, then power on, LAMP pressed twice, ~30 s idle.
    **Not a single byte.** A UART at any other baud would still toggle the line
    and show up as garbage, so other baud rates were skipped: `UTX` never moves.
-2. **Trace check** ([measuring points](photos/measure-j2.jpg)), board unpowered: continuity `UTX`/`URX` to U2's pins vs. to
-   U6's pads; resistance `UTX`/`URX` to `GND` and to `3V3` (pull-down?).
-3. **Bootloader:** `PRG` is pulled high, so pulling it to `GND` while powering
-   up probably starts U2's ROM bootloader on these pins. If `UTX` then sits at
-   3.3 V or answers, that may identify the chip. Listen only, send nothing;
-   power-cycle without the bridge to return to normal.
+2. **Trace check** ([measuring points](photos/measure-j2.jpg)):
+   - Multimeter, board unpowered: `UTX`–`GND` shows ~1.5 MΩ for a moment, then
+     over range on 2 MΩ. No pull-up, no pull-down, no direct link to `GND`.
+   - Photos ([wired](photos/back-j2-wired.jpg), [front](photos/front-lcd-touch.jpg)):
+     `UTX` and `URX` each run a few mm from J2 into a via. On the LCD side a
+     short bundle of traces crosses **under** the long signal bus towards the
+     U6/J4 edge, and comes back up in vias right next to U6. No trace from these
+     vias towards U2 is visible. Not checked for continuity; read off photos.
+   - **Conclusion (photos + meter, not proven):** J2 is the UART header of the
+     unfitted U6, not of U2. That explains 0 V at idle: the net floats and the
+     meter pulls it to 0 V. In this unit nothing ever drives it.
+3. **Bootloader** (`PRG` to `GND` at power-up): skipped. Where `PRG` goes is
+   not visible on the photos, and with `UTX`/`URX` not on U2, a U2 bootloader
+   would not show up on J2 anyway.
+
+**Approach A is out for this board variant.** Next is C.
+
+### Notes for approach C
+
+- U7 (SOP-24, LCD driver): marking not legible under the conformal coating
+  ([photo](photos/back-logic-u7.jpg)). Only **four** traces from the signal bus
+  reach U7 (plus R33/C23), the other pins go to the LCD. Four lines suggest a
+  serial interface (chip select, clock/write, data, …), which an ESP32 can
+  sniff. Which line is which: logic analyser on those four traces while
+  pressing buttons.
+- Buttons: U9 reads the 6 springs and talks to U2 over J11 (`TOUCH_INT`,
+  `I2C_SDA`, `I2C_SCL`, `TOUCH_RST`). Sniffing that I²C bus would give
+  button events directly; injecting presses there is an alternative to
+  "touching" the springs with analog switches.
 
 ## Photos
 
@@ -183,5 +206,6 @@ and motor section, and `measure-j2.jpg` with the J2 measuring points.
 - [ ] Which panel button opens/closes the lid?
 - [x] J2: voltages (UTX idle at 0 V, see above)
 - [x] J2: boot output (silent)
-- [ ] J2: trace check, bootloader (above)
-- [ ] Decide A or B
+- [x] J2: trace check (photos + meter): J2 belongs to U6, approach A is out
+- [ ] C: identify the four U7 lines and the J11 I²C traffic (logic analyser)
+- [ ] Decide C or B

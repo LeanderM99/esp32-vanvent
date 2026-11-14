@@ -170,14 +170,19 @@ running on these pads in normal operation, or the pads are not connected to U2
      short bundle of traces crosses **under** the long signal bus towards the
      U6/J4 edge, and comes back up in vias right next to U6. No trace from these
      vias towards U2 is visible. Not checked for continuity; read off photos.
-   - **Conclusion (photos + meter, not proven):** J2 is the UART header of the
-     unfitted U6, not of U2. That explains 0 V at idle: the net floats and the
-     meter pulls it to 0 V. In this unit nothing ever drives it.
-3. **Bootloader** (`PRG` to `GND` at power-up): skipped. Where `PRG` goes is
-   not visible on the photos, and with `UTX`/`URX` not on U2, a U2 bootloader
-   would not show up on J2 anyway.
+   - **Conclusion (photos + meter, not proven):** J2 floats; in normal operation
+     nothing drives `UTX`. Whether the pads end at U6 only or also reach a U2 pin
+     can't be read off the photos: four traces from U2 (routed around crystal
+     Y1) also end in vias right next to U6, and the front-side bundle connects
+     that via cluster to somewhere else.
+3. **Bootloader** (`PRG` to `GND` at power-up): not done yet.
 
-**Approach A is out for this board variant.** Next is C.
+**Better target for approach A: the U2 → U6 lines.** In the CAN variant U2 has
+to talk to U6. Those four U2 traces end in open vias by U6
+([measuring points A1–A4, B1–B5](photos/measure-u6-vias.jpg)). If U2's firmware
+still talks to the missing U6, one of them idles at 3.3 V (UART TX) or toggles.
+Next: DC voltage on each via with the VanVent running, then sniff any that sits
+at 3.3 V with `sniff.py`.
 
 ### Notes for approach C
 
@@ -206,6 +211,7 @@ and motor section, and `measure-j2.jpg` with the J2 measuring points.
 - [ ] Which panel button opens/closes the lid?
 - [x] J2: voltages (UTX idle at 0 V, see above)
 - [x] J2: boot output (silent)
-- [x] J2: trace check (photos + meter): J2 belongs to U6, approach A is out
+- [x] J2: floats, silent at power-up
+- [ ] U2 → U6 vias A1–A4: voltages while running, then sniff
 - [ ] C: identify the four U7 lines and the J11 I²C traffic (logic analyser)
-- [ ] Decide C or B
+- [ ] Decide A, C or B

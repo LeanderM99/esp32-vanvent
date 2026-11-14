@@ -143,6 +143,30 @@ Only `UTX` (U2's output) matters for now: with U6 unfitted, nothing drives `URX`
 6. Press every panel button one at a time and note what you pressed when.
    Also leave it idle for a minute (periodic status frames?).
 
+### J2 measurements (2026-11-14)
+
+Running VanVent, multimeter against `GND`:
+
+| Pin | Idle | While pressing buttons |
+|---|---|---|
+| `3V3` | 3.3 V | |
+| `PRG` | 3.3 V | |
+| `UTX` | **0 V** | 0 V |
+| `URX` | 0 V | |
+
+An active UART idles high (3.3 V). `UTX` at 0 V means U2's UART is not
+running on these pads in normal operation, or the pads are not connected to U2
+(they may lead only to the unfitted U6). Still open before falling back to C:
+
+1. **Boot output:** listen on `UTX` (`sniff.py`, 115200 first) while switching
+   the VanVent on. Some ROM bootloaders print a few bytes, then go quiet.
+2. **Trace check**, board unpowered: continuity `UTX`/`URX` to U2's pins vs. to
+   U6's pads; resistance `UTX`/`URX` to `GND` and to `3V3` (pull-down?).
+3. **Bootloader:** `PRG` is pulled high, so pulling it to `GND` while powering
+   up probably starts U2's ROM bootloader on these pins. If `UTX` then sits at
+   3.3 V or answers, that may identify the chip. Listen only, send nothing;
+   power-cycle without the bridge to return to normal.
+
 ## Next steps
 
 - [ ] Legible chip markings: U6, U2, U9, U7, U10, the QFN by J8, the TSSOP-16
@@ -150,5 +174,6 @@ Only `UTX` (U2's output) matters for now: with U6 unfitted, nothing drives `URX`
 - [ ] Front side of the board: touch pads, LCD connection (needed for B)
 - [ ] J7: which of the four pins is unused?
 - [ ] Which panel button opens/closes the lid?
-- [ ] J2: voltages, then sniff (above)
+- [x] J2: voltages (UTX idle at 0 V, see above)
+- [ ] J2: boot output, trace check, bootloader (above)
 - [ ] Decide A or B

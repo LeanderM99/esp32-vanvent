@@ -158,14 +158,21 @@ An active UART idles high (3.3 V). `UTX` at 0 V means U2's UART is not
 running on these pads in normal operation, or the pads are not connected to U2
 (they may lead only to the unfitted U6). Still open before falling back to C:
 
-1. **Boot output:** listen on `UTX` (`sniff.py`, 115200 first) while switching
-   the VanVent on. Some ROM bootloaders print a few bytes, then go quiet.
-2. **Trace check**, board unpowered: continuity `UTX`/`URX` to U2's pins vs. to
+1. ~~**Boot output**~~ **done, silent:** `sniff.py` @ 115200 (FT232, RX → `UTX`),
+   listener started first, then power on, LAMP pressed twice, ~30 s idle.
+   **Not a single byte.** A UART at any other baud would still toggle the line
+   and show up as garbage, so other baud rates were skipped: `UTX` never moves.
+2. **Trace check** ([measuring points](photos/measure-j2.jpg)), board unpowered: continuity `UTX`/`URX` to U2's pins vs. to
    U6's pads; resistance `UTX`/`URX` to `GND` and to `3V3` (pull-down?).
 3. **Bootloader:** `PRG` is pulled high, so pulling it to `GND` while powering
    up probably starts U2's ROM bootloader on these pins. If `UTX` then sits at
    3.3 V or answers, that may identify the chip. Listen only, send nothing;
    power-cycle without the bridge to return to normal.
+
+## Photos
+
+[`photos/`](photos/): both sides of the board, close-ups of U2, J2, the power
+and motor section, and `measure-j2.jpg` with the J2 measuring points.
 
 ## Next steps
 
@@ -175,5 +182,6 @@ running on these pads in normal operation, or the pads are not connected to U2
 - [ ] J7: which of the four pins is unused?
 - [ ] Which panel button opens/closes the lid?
 - [x] J2: voltages (UTX idle at 0 V, see above)
-- [ ] J2: boot output, trace check, bootloader (above)
+- [x] J2: boot output (silent)
+- [ ] J2: trace check, bootloader (above)
 - [ ] Decide A or B
